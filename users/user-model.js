@@ -1,5 +1,8 @@
 module.exports = {
-    
+    findById,
+    find,
+    add,
+    findBy
 }
 
 const db = require("../data/connection");
