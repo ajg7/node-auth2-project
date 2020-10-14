@@ -1,9 +1,22 @@
-const bcryptjs = require("bcryptsjs");
+const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const router = require("express").Router();
 const { isValid } = require("../users/users-service");
 const Users = require("../users/user-model");
-const secret = require("./secret");
+const Secret = require("./secret");
+
+function getJwt(user) {
+    const payload = {
+        username: user.username,
+        department: user.department
+    }
+    const secret = Secret.jwtSecret;
+    const options = {
+        expiresIn: "10h"
+    }
+    return jwt.sign(payload, secret, options)
+}
+
 
 router.post("/register", (request, response) => {
     const credentials = request.body;
@@ -12,8 +25,8 @@ router.post("/register", (request, response) => {
     credentials.password = hash;
 
     Users.add(credentials)
-        .then(response => {
-            response.status(201).json({ data: response })
+        .then(user => {
+            response.status(201).json({ data: user })
         })
         .catch(error => {
             response.status(500).json({ message: error.message })
@@ -26,6 +39,7 @@ router.post("/login", (request, response) => {
     if (isValid(request.body)) {
         Users.findBy({ username: username })
             .then(([user]) => {
+                
           // compare the password the hash stored in the database
             if (user && bcryptjs.compareSync(password, user.password)) {
 
@@ -46,16 +60,6 @@ router.post("/login", (request, response) => {
     }
 });
 
-function getJwt(user) {
-    const payload = {
-        username: user.username,
-        department: user.department
-    }
-    const secret = secret.jwtSecret;
-    const options = {
-        expiresIn: "10h"
-    }
-    return jwt.sign(payload, secret, options)
-}
+
 
 module.exports = router;
